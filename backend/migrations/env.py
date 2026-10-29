@@ -12,6 +12,7 @@ from app.models.equipment import Equipment  # noqa: F401
 from app.models.reservation import Reservation  # noqa: F401
 from app.models.ai import AIConversation, AIMessage  # noqa: F401
 from app.models.notification import Notification  # noqa: F401
+from app.models.agent_audit import AgentAuditLog  # noqa: F401
 
 from alembic import context
 

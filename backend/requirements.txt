@@ -1,3 +1,8 @@
+# 依赖锁定清单（“我要的精确版本”）。
+# 每个版本都经过本仓库 35 个测试验证；直接依赖见 requirements.in。
+# 说明：这里锁定的是直接依赖，传递依赖仍由 pip 解析；需要完整可复现（含传递依赖 + hash）
+# 时用 pip-compile 重新生成，见 requirements.in 顶部说明。
+
 fastapi==0.115.13
 uvicorn==0.34.0
 sqlalchemy==2.0.41
@@ -7,11 +12,11 @@ bcrypt==5.0.0
 PyJWT==2.13.0
 python-multipart==0.0.32
 cryptography==50.0.2
-openai == 3.31.0
-chromadb
-sentence-transformers == 6.0.1
-langgraph
-langchain-openai
-langchain-core
-alembic>=1.13
-APScheduler>=3.10,<4.0
+openai==3.31.0
+chromadb==1.5.9
+sentence-transformers==6.0.1
+langgraph==1.2.15
+langchain-openai==1.7.2
+langchain-core==1.6.11
+alembic==1.20.1
+APScheduler==3.11.3

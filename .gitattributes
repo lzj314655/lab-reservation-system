@@ -1,0 +1,17 @@
+# 统一换行：仓库内一律 LF（Windows 检出也不会被 core.autocrlf 改成 CRLF）
+* text=auto eol=lf
+
+# 二进制资源，禁止任何文本转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.docx binary
+*.xlsx binary
+*.zip binary
+*.woff binary
+*.woff2 binary
+*.ttf binary

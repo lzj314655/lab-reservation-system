@@ -43,6 +43,15 @@ jobs:
       - name: Install dependencies
         run: pip install -r backend/requirements-dev.txt
 
+      # 全新库上验证部署路径（create_all + alembic stamp），并检查 env.py 的模型导入
+      # 是否完整（漏导入会让 autogenerate 误判为"删表"）。
+      # 注意：这里不覆盖"模型改了但没写迁移"的漂移检测，那需要一条 baseline 迁移。
+      - name: Bootstrap DB & alembic metadata check
+        working-directory: backend
+        run: |
+          python scripts/bootstrap_db.py
+          alembic check
+
       - name: Lint (ruff)
         working-directory: backend
         run: ruff check app tests scripts

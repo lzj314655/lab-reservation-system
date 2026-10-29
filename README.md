@@ -91,6 +91,8 @@ AgentProject/
 
 ## 快速开始
 
+> 最快路径（Windows）：`.\scripts\bootstrap.ps1` → `.\scripts\dev.ps1`，详见下文「工程化与本地开发」。
+
 ### 环境要求
 
 - Python 3.10+
@@ -162,6 +164,38 @@ npm run dev
 ```sql
 UPDATE users SET role = 'admin' WHERE username = '你的账号';
 ```
+
+## 工程化与本地开发
+
+### 一键脚本（Windows PowerShell）
+
+```powershell
+.\scripts\bootstrap.ps1             # 建 venv、装锁定依赖、生成 .env、初始化数据库结构
+.\scripts\bootstrap.ps1 -WithDocker # 额外拉起 compose 里的 MySQL 并等待健康检查
+.\scripts\dev.ps1                   # 两个窗口分别启动后端 8000 + 前端 5173
+.\scripts\check.ps1                 # 本地质量门禁：ruff + pytest（+ 前端 build）
+.\scripts\check.ps1 -BackendOnly    # 只跑后端检查（没装前端依赖时用）
+```
+
+装了 `make` 时等价命令：`make bootstrap` / `make dev` / `make check`（默认调用 `powershell`，用 PowerShell 7 时加 `make PS=pwsh`）。
+
+若系统执行策略拦截脚本，用：`powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check.ps1`。
+
+### 版本与依赖基线
+
+- **Python 3.12** 是部署/CI 基线（`.python-version`）；本地 3.14 也能跑，但提交前以 CI 行为为准。
+- **Node 22** 是 CI 版本（`.node-version`），`package.json` 的 `engines` 同时允许 24+。
+- 依赖分两层：`backend/requirements.in` 是"我要什么"（直接依赖），`backend/requirements.txt` 锁定精确版本；升级流程为
+  `改 requirements.in → pip-compile 重新生成 → 跑 pytest → 一起提交`。
+- `.gitattributes` 统一 LF，`.editorconfig` 统一 UTF-8 与缩进，避免 Windows/Linux 换行与编码差异。
+- 根目录 `.gitignore` 已排除 `.env`、`.venv`、`node_modules`、`dist`、`uploads`、`data/chroma`；密钥只提交 `.env.example`。
+
+### 数据库迁移
+
+- **全新库**：`cd backend` 后执行 `python scripts/bootstrap_db.py`（`create_all` 建表 + 写入 alembic head）。
+- **已有库**：只走 `alembic upgrade head`；不要用 `create_all` 改结构（它不会 ALTER 已有表）。
+- CI 会在全新库上执行 `bootstrap_db.py` 并跑 `alembic check`，校验 `migrations/env.py` 的模型导入完整性。
+- 已知限制：当前迁移链缺少 baseline（首条迁移假设表已存在），所以还不能用 `alembic upgrade head` 从零建库，也无法检测"模型改了但没写迁移"的漂移。补一条 baseline 迁移后即可开启 `alembic check` 漂移门禁。
 
 ## 使用说明
 

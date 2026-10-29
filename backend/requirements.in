@@ -1,0 +1,22 @@
+# 直接依赖清单（“我要什么”）。
+# 升级依赖时改这里，再重新生成 requirements.txt（可用 pip-compile 生成含传递依赖的完整锁）：
+#   pip install pip-tools
+#   pip-compile requirements.in -o requirements.txt
+
+fastapi
+uvicorn
+sqlalchemy
+pymysql
+pydantic-settings
+bcrypt
+PyJWT
+python-multipart
+cryptography
+openai
+chromadb
+sentence-transformers
+langgraph
+langchain-openai
+langchain-core
+alembic
+APScheduler
