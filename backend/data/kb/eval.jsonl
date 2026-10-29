@@ -1,0 +1,15 @@
+{"id": 1, "question": "怎么预约实验室？", "answer_points": ["打开实验室列表", "选择实验室或设备", "填写日期和时段后提交"], "expected_source": "预约规则.md", "difficulty": "easy", "note": "关键词直配"}
+{"id": 2, "question": "预约提交之后是什么状态？", "answer_points": ["状态为待审核", "管理员通过后才能使用"], "expected_source": "预约规则.md", "difficulty": "easy", "note": "关键词直配"}
+{"id": 3, "question": "待审核的预约可以取消吗？", "answer_points": ["待审核、已通过的预约本人可以取消"], "expected_source": "预约规则.md", "difficulty": "easy", "note": "关键词直配"}
+{"id": 4, "question": "我约的实验室突然不想去了，能退掉不", "answer_points": ["待审核或已通过的预约本人可以取消"], "expected_source": "预约规则.md", "difficulty": "medium", "note": "口语化改写，无'取消'关键词"}
+{"id": 5, "question": "已经被拒绝的预约还能再取消一次吗？", "answer_points": ["已拒绝的不能取消"], "expected_source": "预约规则.md", "difficulty": "medium", "note": "否定语义+易与可取消状态混淆"}
+{"id": 6, "question": "进入实验室对穿着有什么要求？", "answer_points": ["须穿实验服", "化学实验室须戴护目镜"], "expected_source": "安全规范.md", "difficulty": "easy", "note": "关键词直配"}
+{"id": 7, "question": "可以带零食进化学实验室吗？", "answer_points": ["禁止把零食带进化学实验室"], "expected_source": "安全规范.md", "difficulty": "easy", "note": "关键词直配"}
+{"id": 8, "question": "实验设备坏了应该怎么处理？", "answer_points": ["立即停用", "联系实验室管理员", "不要自行拆修"], "expected_source": "安全规范.md", "difficulty": "medium", "note": "'坏了'为口语表述"}
+{"id": 9, "question": "离开实验室之前需要做哪些收尾？", "answer_points": ["关闭电源、水源", "清理台面"], "expected_source": "安全规范.md", "difficulty": "medium", "note": "'收尾'为改写词"}
+{"id": 10, "question": "计算机实验室周末几点开门？", "answer_points": ["周末 09:00-17:00"], "expected_source": "开放时间.md", "difficulty": "easy", "note": "关键词直配"}
+{"id": 11, "question": "化学实验室周六周日开放吗？", "answer_points": ["周末不开放"], "expected_source": "开放时间.md", "difficulty": "easy", "note": "同义替换'周六周日'"}
+{"id": 12, "question": "物理实验室平时开到晚上几点？", "answer_points": ["周一至周日 08:00-20:00"], "expected_source": "开放时间.md", "difficulty": "medium", "note": "'平时/晚上几点'间接指代"}
+{"id": 13, "question": "到了开放时间是不是就能直接进实验室？", "answer_points": ["不能", "仍需先预约并审核通过"], "expected_source": "开放时间.md", "difficulty": "hard", "note": "陷阱题：易被误导向预约规则文档"}
+{"id": 14, "question": "预约设备的时候必须选实验室吗？", "answer_points": ["必须同时选择所属实验室"], "expected_source": "设备使用.md", "difficulty": "easy", "note": "关键词直配"}
+{"id": 15, "question": "我预约了设备，这个时段实验室还算空着吗？", "answer_points": ["设备与实验室绑定", "时段内实验室也占用"], "expected_source": "设备使用.md", "difficulty": "hard", "note": "口语化+需理解'绑定'语义，易误导向预约规则"}

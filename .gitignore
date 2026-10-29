@@ -1,0 +1,50 @@
+# ============================================================
+# 仓库根 .gitignore
+# 目标：.env（真实密钥）、虚拟环境、构建产物、运行时数据一律不入库
+# ============================================================
+
+# ---- 环境变量（backend/.env 里是真实的 LLM Key / 数据库密码） ----
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+
+# ---- 运行时数据（本地生成，不入库） ----
+backend/uploads/
+backend/data/chroma/
+
+# ---- 前端 ----
+node_modules/
+dist/
+dist-ssr/
+coverage/
+*.local
+.vite/
+*.timestamp-*-*.mjs
+
+# ---- IDE / 操作系统 ----
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini

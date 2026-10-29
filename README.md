@@ -1,0 +1,197 @@
+# 智能实验室预约系统
+
+一个基于 **FastAPI + Vue 3 + LangGraph Agent** 的实验室预约管理系统，支持实验室/设备预约与审核、周视图预约日历、站内通知、数据统计，并内置基于 RAG（检索增强生成）的 AI 智能助手，可以用一句话完成查规则、查空闲、提交预约。
+
+## 功能总览
+
+| 模块 | 说明 |
+| --- | --- |
+| 用户认证 | 注册 / 登录，JWT 鉴权，bcrypt 密码加密，student / admin 两种角色；登录失败限流（同一账号 + IP 15 分钟内 5 次） |
+| 实验室管理 | 实验室增删改查（管理员），封面图上传、开放时间、容量、开放状态 |
+| 设备管理 | 按实验室管理设备台账，型号 / 数量 / 维修状态（管理员） |
+| 预约与审核 | 学生预约实验室或设备，管理员审核通过 / 拒绝；时段冲突检测（含并发行锁）、开放时间校验、过期自动置为已取消 |
+| 预约日历 | 周视图时间轴直观查看某实验室的占用情况，点击空时段直接带入预约弹窗 |
+| 站内通知 | 审核结果、AI 代预约结果实时推送，顶栏铃铛 + 未读角标，支持一键已读 |
+| 数据统计 | 首页真实数据统计卡 + ECharts 图表（预约趋势、实验室使用排行、审核通过率、我的预约状态分布） |
+| AI 智能助手 | LangGraph Agent + RAG 知识库问答，流式输出（SSE），支持工具调用真实落库：查实验室 / 查设备 / 创建预约 / 取消预约，多轮会话历史保存 |
+| 个人中心 | 资料修改、头像上传、修改密码 |
+
+## 技术栈
+
+### 后端（`backend/`）
+
+| 技术 | 用途 |
+| --- | --- |
+| Python 3.10+ / FastAPI | Web 框架，RESTful API |
+| SQLAlchemy 2.0 | ORM（MySQL，pymysql 驱动） |
+| PyJWT + bcrypt | 登录态与密码加密 |
+| pydantic-settings | 配置管理（`.env`） |
+| LangGraph + langchain-openai | Agent 编排（ReAct 循环 + ToolNode） |
+| ChromaDB + sentence-transformers | 向量知识库（嵌入模型 `BAAI/bge-small-zh-v1.5`） |
+| uvicorn | ASGI 服务器 |
+
+### 前端（`frontend/`）
+
+| 技术 | 用途 |
+| --- | --- |
+| Vue 3（Composition API）+ Vite | 前端框架与构建工具 |
+| Element Plus | UI 组件库（深青墨色定制主题） |
+| ECharts 5 | 统计图表 |
+| Axios | HTTP 请求（统一拦截器、401 处理） |
+| Vue Router 4 | 路由 + 登录/角色守卫 |
+
+### AI 架构说明
+
+```
+用户消息
+   │
+   ▼
+LangGraph Agent（系统提示词 + 多轮历史）
+   │  需要事实时调用工具
+   ├── search_lab_docs        检索知识库（ChromaDB 向量检索）
+   ├── list_open_labs         查询开放实验室
+   ├── list_lab_equipments    查询实验室设备
+   ├── create_lab_reservation 创建预约（真实落库 + 站内通知）
+   ├── cancel_lab_reservation 取消预约
+   └── get_today              获取今天日期（换算"明天/后天"）
+   │
+   ▼
+SSE 流式返回（思考状态 / 工具调用过程 / 逐字回复）
+```
+
+知识库语料为 `backend/data/kb/*.md`（预约规则、安全规范、开放时间、设备使用），首次启动自动向量化并入库。
+
+## 目录结构
+
+```
+AgentProject/
+├── backend/
+│   ├── app/
+│   │   ├── api/            # 路由层: auth/user/lab/equipment/reservation/files/ai/notification/stats
+│   │   ├── services/       # 业务层: 预约冲突检测、Agent 工具、RAG 检索、统计、通知...
+│   │   ├── models/         # SQLAlchemy 模型
+│   │   ├── schemas/        # Pydantic 请求/响应模型
+│   │   ├── common/         # 统一响应与全局异常处理
+│   │   ├── dependencies/   # 登录态/管理员鉴权依赖
+│   │   └── utils/          # JWT、密码加密
+│   ├── data/kb/            # RAG 知识库语料（Markdown）
+│   ├── uploads/            # 上传文件存储
+│   ├── requirements.txt
+│   └── .env                # 环境变量（需自行创建）
+└── frontend/
+    ├── src/
+    │   ├── api/            # 接口封装
+    │   ├── views/          # 页面（登录/首页/日历/实验室/设备/用户/预约/AI聊天...）
+    │   ├── layout/         # 主框架（深色侧边栏 + 通知铃铛）
+    │   ├── components/     # 预约弹窗等公共组件
+    │   ├── router/         # 路由与守卫
+    │   └── utils/          # axios 拦截器、登录态存储
+    └── package.json
+```
+
+## 快速开始
+
+### 环境要求
+
+- Python 3.10+
+- Node.js 18+（建议 22）
+- MySQL 5.7+ / 8.0
+
+### 1. 启动后端
+
+```bash
+cd backend
+
+# 创建并激活虚拟环境
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# macOS / Linux
+source .venv/bin/activate
+
+# 安装依赖
+pip install -r requirements.txt
+```
+
+在 `backend/` 下创建 `.env`（参考格式）：
+
+```env
+DATABASE_URL=mysql+pymysql://root:你的密码@127.0.0.1:3306/lzjai
+JWT_SECRET_KEY=一串随机字符串
+JWT_EXPIRE_HOURS=24
+JWT_ALGORITHM=HS256
+LLM_API_KEY=你的大模型API Key
+LLM_MODEL=模型名称
+LLM_BASE_URL=https://xxx/v1
+# 可选：允许跨域的前端地址（逗号分隔），默认已覆盖 Vite 5173
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+```
+
+> 仓库根目录已提供 `.gitignore`：`backend/.env`、`.venv`、`node_modules`、`uploads`、`data/chroma` 等都不会被提交。
+
+初始化数据库（任选其一）：
+
+```sql
+CREATE DATABASE lzjai DEFAULT CHARACTER SET utf8mb4;
+```
+
+启动服务（首次启动会自动建表、加载并向量化知识库）：
+
+```bash
+uvicorn app.main:app --reload --port 8000
+```
+
+接口文档自动生成：<http://127.0.0.1:8000/docs>
+
+### 2. 启动前端
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+访问 <http://localhost:5173>。
+
+前端通过 `frontend/.env.development` 中的 `VITE_API_BASE_URL` 指向后端地址（默认 `http://127.0.0.1:8000`），跨域已由后端 CORS 配置放行。
+
+### 3. 创建管理员账号
+
+注册页注册的账号默认为 `student` 角色。将某账号提升为管理员：
+
+```sql
+UPDATE users SET role = 'admin' WHERE username = '你的账号';
+```
+
+## 使用说明
+
+### 学生端
+
+1. **预约日历**：选择实验室 → 周视图中点击任意空白时段 → 弹窗自动带入日期和时间 → 确认提交（青色块为已通过预约，虚线块为待审核）
+2. **实验室列表**：浏览实验室卡片，可查看设备详情、从卡片发起预约
+3. **我的预约记录**：查看待审核 / 已通过 / 已拒绝 / 已取消，待审核的可以取消
+4. **AI 智能助手**：直接对话，例如
+   - "明天上午有哪些实验室开放？"
+   - "帮我预约后天 9 点到 11 点的网络工程实验室"
+   - "预约实验室需要遵守什么规则？"（RAG 检索知识库回答）
+   - 确认信息后 AI 会真实创建预约，并在铃铛通知里收到结果
+5. **通知**：顶栏铃铛查看审核结果，点击通知跳转到预约记录
+
+### 管理员端
+
+1. **实验室管理 / 设备列表管理**：维护实验室与设备信息（含图片上传、开放时间、状态）
+2. **预约审核管理**：按状态 / 申请人 / 实验室关键字筛选，通过或拒绝待审核预约（审核结果自动推送给学生）
+3. **用户管理**：新增用户、调整角色与状态
+4. **首页仪表盘**：真实统计数据与趋势图表
+
+## 常见问题
+
+- **AI 助手不回复**：检查 `.env` 中 `LLM_API_KEY / LLM_BASE_URL / LLM_MODEL` 是否可用
+- **首次启动较慢**：正在下载 `bge-small-zh-v1.5` 嵌入模型并构建向量库，之后会复用本地缓存
+- **删除实验室/设备/用户提示"存在关联记录"**：系统会阻止删除已有预约或设备关联的数据，保证数据完整性
+- **token 过期**：前端会自动清理登录态并跳转登录页（默认 24 小时有效）
+
+## 技术深潜文档
+
+- [预约并发防超订：设计、改造与验证记录](docs/reservation-concurrency.md) —— 三方案对比、父行锁+生成列唯一索引四层设计、预约状态机、APScheduler+GET_LOCK 定时扫描、pytest 并发测试与 Locust 压测数据（50 并发 1 万请求 0 超订 0 死锁）
+- [Agent 安全加固：风险清单、分层防护与验证](docs/agent-security.md) —— 8 项风险与攻击示例、六层防护（JWT 身份闭包/输入清洗/参数校验/配额/提示词防注入/审计日志）、提示词注入测试用例
