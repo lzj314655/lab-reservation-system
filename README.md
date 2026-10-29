@@ -1,7 +1,59 @@
 # 智能实验室预约系统
 
-一个基于 **FastAPI + Vue 3 + LangGraph Agent** 的实验室预约管理系统，支持实验室/设备预约与审核、周视图预约日历、站内通知、数据统计，并内置基于 RAG（检索增强生成）的 AI 智能助手，可以用一句话完成查规则、查空闲、提交预约。
+<p>
+  <img src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white" alt="FastAPI">
+  <img src="https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vuedotjs&logoColor=white" alt="Vue">
+  <img src="https://img.shields.io/badge/LangGraph-Agent-1C3C3C" alt="LangGraph">
+  <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white" alt="MySQL">
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" alt="Docker">
+</p>
 
+一个基于 **FastAPI + Vue 3 + LangGraph Agent** 的实验室预约管理系统：实验室 / 设备预约与审核、周视图日历、站内通知、数据统计，内置基于 RAG 的 AI 智能助手，一句话完成查规则、查空闲、提交预约。
+
+[快速开始](#quickstart) · [界面预览](#screenshots) · [系统架构](#architecture) · [功能总览](#features) · [技术深潜](#docs)
+
+![首页仪表盘](docs/screenshots/dashboard.png)
+
+## 核心亮点
+
+- **0 超订 / 0 死锁**：预约写入走 MySQL 父行锁，配合 STORED 生成列唯一索引兜底与 1213/1205 退避重试；Locust 50 并发 10,040 次请求，0 超订、0 死锁、0 个 5xx。
+- **Agent 六层防护**：身份取自 JWT 闭包、历史消息清洗、参数校验、Agent 配额、提示词注入防护、工具调用审计；越权取消 / 注入用例均有确定性测试。
+- **完整业务闭环**：注册登录 → 实验室 / 设备预约 → 管理员审核 → 日历占用 → 站内通知 → 统计看板 → AI 代预约，配个人中心与文件上传。
+- **工程化底座**：37 个后端测试、ruff、Alembic 迁移、Docker Compose 一键启动、GitHub Actions CI，另附两篇技术深潜文档。
+
+<a name="screenshots"></a>
+## 界面预览
+
+<p align="center">
+  <img src="docs/screenshots/login.png" width="49%" alt="登录页">
+  <img src="docs/screenshots/lab-calendar.png" width="49%" alt="预约日历">
+</p>
+<p align="center">
+  <img src="docs/screenshots/lab-list.png" width="49%" alt="实验室列表">
+  <img src="docs/screenshots/ai-chat.png" width="49%" alt="AI 智能助手">
+</p>
+
+<a name="architecture"></a>
+## 系统架构
+
+```mermaid
+flowchart LR
+    U["浏览器<br/>Vue 3 + Element Plus"] --> N["nginx :8080"]
+    N -->|"静态资源"| U
+    N -->|"/api · /uploads"| B["FastAPI :8000"]
+    B --> S["Service 层<br/>并发控制 · 通知 · 统计"]
+    S --> M[("MySQL 8.0")]
+    S --> C[("ChromaDB<br/>知识库")]
+    B --> A["LangGraph Agent<br/>ReAct + ToolNode"]
+    A --> T["工具集<br/>查实验室 / 查设备 / 建预约 / 取消 / 检索"]
+    T --> S
+    A --> L["OpenAI 兼容 LLM<br/>SSE 流式输出"]
+```
+
+> 详细设计见 [预约并发防超订](docs/reservation-concurrency.md) 与 [Agent 安全加固](docs/agent-security.md)。
+
+<a name="features"></a>
 ## 功能总览
 
 | 模块 | 说明 |
@@ -89,6 +141,7 @@ AgentProject/
     └── package.json
 ```
 
+<a name="quickstart"></a>
 ## 快速开始
 
 > 最快路径（Windows）：`.\scripts\bootstrap.ps1` → `.\scripts\dev.ps1`，详见下文「工程化与本地开发」。
@@ -248,6 +301,7 @@ docker compose -f docker-compose.yml -f docker-compose.hostdb.yml up -d --no-dep
 - **删除实验室/设备/用户提示"存在关联记录"**：系统会阻止删除已有预约或设备关联的数据，保证数据完整性
 - **token 过期**：前端会自动清理登录态并跳转登录页（默认 24 小时有效）
 
+<a name="docs"></a>
 ## 技术深潜文档
 
 - [预约并发防超订：设计、改造与验证记录](docs/reservation-concurrency.md) —— 三方案对比、父行锁+生成列唯一索引四层设计、预约状态机、APScheduler+GET_LOCK 定时扫描、pytest 并发测试与 Locust 压测数据（50 并发 1 万请求 0 超订 0 死锁）
