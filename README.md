@@ -181,6 +181,29 @@ UPDATE users SET role = 'admin' WHERE username = '你的账号';
 
 若系统执行策略拦截脚本，用：`powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check.ps1`。
 
+### Docker 运行
+
+标准方式（需要能访问 Docker Hub 拉取 `mysql:8.0`）：
+
+```powershell
+docker compose up -d --build
+```
+
+- 前端：<http://localhost:8080>（nginx 反代 `/api`、`/uploads` 到后端）
+- 后端接口文档：<http://localhost:8000/docs>
+- MySQL 暴露在宿主机 **3307**，避免与本地 3306 冲突
+- 停止：`docker compose down`；`docker compose down -v` 会连数据卷一起删
+
+如果 Docker Hub 不可用（代理未启动/镜像仓库被墙），但宿主机已有 MySQL 8.0，可复用宿主库、跳过 mysql 容器：
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.hostdb.yml up -d --no-deps backend frontend
+```
+
+说明：Docker Desktop 会把 `host.docker.internal` 的流量转成宿主 loopback，MySQL 看到的来源是 `localhost`，因此沿用 `root@localhost`；库名与密码取根目录 `.env` 的 `MYSQL_DATABASE` / `MYSQL_ROOT_PASSWORD`。
+
+镜像说明：后端 Dockerfile 显式安装 **CPU 版 torch**（约 200MB），避免默认 CUDA 依赖把镜像撑到 8GB；bge-small 嵌入模型在构建期预热并烘焙进镜像，运行时离线加载。当前镜像体积约 2.8GB。
+
 ### 版本与依赖基线
 
 - **Python 3.12** 是部署/CI 基线（`.python-version`）；本地 3.14 也能跑，但提交前以 CI 行为为准。

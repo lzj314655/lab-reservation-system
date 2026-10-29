@@ -1,0 +1,20 @@
+# 可选：复用宿主机已运行的 MySQL 8.0，跳过 compose 里的 mysql 服务。
+#
+# 使用场景：
+#   - 当前网络无法从 Docker Hub 拉取 mysql:8.0（代理不可用 / 镜像仓库被墙）
+#   - 本机已经有 MySQL 8.0 在 3306 上跑着，且库结构与 compose 一致
+#
+# 用法：
+#   docker compose -f docker-compose.yml -f docker-compose.hostdb.yml up -d --no-deps backend frontend
+#
+# 说明：
+#   - --no-deps 会跳过 backend 对 mysql 的 depends_on，所以不会去拉 mysql 镜像
+#   - Docker Desktop 会把 host.docker.internal 的流量转成宿主 loopback，
+#     MySQL 看到的来源是 localhost，因此 root@localhost 可直接使用
+#   - 数据库名/密码仍从根目录 .env 的 MYSQL_DATABASE / MYSQL_ROOT_PASSWORD 读取
+services:
+  backend:
+    environment:
+      DATABASE_URL: mysql+pymysql://root:${MYSQL_ROOT_PASSWORD:-123456}@host.docker.internal:3306/${MYSQL_DATABASE:-lzjai}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
