@@ -70,12 +70,15 @@ flowchart LR
 
 ## 技术栈
 
+> 完整版本矩阵、分层架构、选型权衡与升级指南见 [技术栈详解](docs/tech-stack.md)。
+
 ### 后端（`backend/`）
 
 | 技术 | 用途 |
 | --- | --- |
-| Python 3.10+ / FastAPI | Web 框架，RESTful API |
+| Python 3.12 / FastAPI | Web 框架，RESTful API |
 | SQLAlchemy 2.0 | ORM（MySQL，pymysql 驱动） |
+| MySQL 8.0 | 关系型数据库（生成列、行锁、`GET_LOCK`） |
 | PyJWT + bcrypt | 登录态与密码加密 |
 | pydantic-settings | 配置管理（`.env`） |
 | LangGraph + langchain-openai | Agent 编排（ReAct 循环 + ToolNode） |
@@ -88,9 +91,9 @@ flowchart LR
 | --- | --- |
 | Vue 3（Composition API）+ Vite | 前端框架与构建工具 |
 | Element Plus | UI 组件库（深青墨色定制主题） |
-| ECharts 5 | 统计图表 |
+| ECharts 6 | 统计图表 |
 | Axios | HTTP 请求（统一拦截器、401 处理） |
-| Vue Router 4 | 路由 + 登录/角色守卫 |
+| Vue Router 5 | 路由 + 登录/角色守卫 |
 
 ### AI 架构说明
 
@@ -148,9 +151,9 @@ AgentProject/
 
 ### 环境要求
 
-- Python 3.10+
-- Node.js 18+（建议 22）
-- MySQL 5.7+ / 8.0
+- Python 3.12（Docker/CI 基线；本地 3.14 也可运行）
+- Node.js 22.18+（CI 使用 22；也支持 24.12+）
+- MySQL 8.0+（生成列、`GET_LOCK` 需要）
 
 ### 1. 启动后端
 
@@ -306,3 +309,4 @@ docker compose -f docker-compose.yml -f docker-compose.hostdb.yml up -d --no-dep
 
 - [预约并发防超订：设计、改造与验证记录](docs/reservation-concurrency.md) —— 三方案对比、父行锁+生成列唯一索引四层设计、预约状态机、APScheduler+GET_LOCK 定时扫描、pytest 并发测试与 Locust 压测数据（50 并发 1 万请求 0 超订 0 死锁）
 - [Agent 安全加固：风险清单、分层防护与验证](docs/agent-security.md) —— 8 项风险与攻击示例、六层防护（JWT 身份闭包/输入清洗/参数校验/配额/提示词防注入/审计日志）、提示词注入测试用例
+- [技术栈详解](docs/tech-stack.md) —— 前后端与 AI 精确版本矩阵、分层架构、Docker/CI、选型权衡、兼容性与升级指南
